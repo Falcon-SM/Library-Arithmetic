@@ -122,12 +122,21 @@ export const EVENT_CARDS: EventCard[] = [
 ];
 
 export const BOARD_CARDS: BoardCard[] = [
-    { id: 'b-cross', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT] },
-    { id: 'b-t', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT] },
-    { id: 'b-straight', connections: [Direction.TOP, Direction.BOTTOM] },
-    { id: 'b-corner', connections: [Direction.TOP, Direction.RIGHT] },
-    { id: 'b-archive', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.ARCHIVE },
-    { id: 'b-event', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT], specialType: TileType.EVENT },
-    { id: 'b-geo', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_GEOMETRY },
-    { id: 'b-alg', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_ALGEBRA },
+    // Basic Paths
+    { id: 'b-cross', name: 'Crossroads', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], description: 'A 4-way intersection.' },
+    { id: 'b-t', name: 'T-Junction', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT], description: 'A 3-way path.' },
+    { id: 'b-straight', name: 'Corridor', connections: [Direction.TOP, Direction.BOTTOM], description: 'A straight hallway.' },
+    { id: 'b-corner', name: 'Corner', connections: [Direction.TOP, Direction.RIGHT], description: 'A turn in the path.' },
+
+    // Special Rooms
+    { id: 'b-archive', name: 'Archive', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.ARCHIVE, description: 'Draw a Mathematician Card.' },
+    { id: 'b-event', name: 'Event Hall', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT], specialType: TileType.EVENT, description: 'Trigger a random event.' },
+    { id: 'b-geo', name: 'Geometry Lab', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_GEOMETRY, description: 'Special Geometry effects.' },
+    { id: 'b-alg', name: 'Algebra Room', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_ALGEBRA, description: 'Special Algebra effects.' },
+
+    // New Rooms
+    { id: 'b-library', name: 'Reading Room', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.LIBRARY, description: 'A quiet place to study.' },
+    { id: 'b-study', name: 'Study Room', connections: [Direction.RIGHT, Direction.LEFT], specialType: TileType.STUDY_ROOM, description: 'Focus and recover MP.' },
+    { id: 'b-garden', name: 'Courtyard', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.GARDEN, description: 'A peaceful garden.' },
+    { id: 'b-cafeteria', name: 'Cafeteria', connections: [Direction.TOP, Direction.RIGHT], specialType: TileType.CAFETERIA, description: 'Grab a coffee.' },
 ];

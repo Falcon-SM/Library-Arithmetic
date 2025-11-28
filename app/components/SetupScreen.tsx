@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store';
 import { Users, Play } from 'lucide-react';
+import { MissionSelection } from './MissionSelection';
 
 export const SetupScreen: React.FC = () => {
-    const { initializeGame } = useGameStore();
+    const { initializeGame, startGame, players } = useGameStore();
     const [playerCount, setPlayerCount] = useState(2);
     const [names, setNames] = useState<string[]>(['Player 1', 'Player 2']);
+    const [missionSelectionIndex, setMissionSelectionIndex] = useState(-1);
 
     const handleCountChange = (count: number) => {
         setPlayerCount(count);
@@ -31,7 +33,30 @@ export const SetupScreen: React.FC = () => {
     const handleStart = () => {
         console.log('Starting game with players:', names);
         initializeGame(names);
+        setMissionSelectionIndex(0);
     };
+
+    const handleMissionComplete = () => {
+        if (missionSelectionIndex < players.length - 1) {
+            setMissionSelectionIndex(prev => prev + 1);
+        } else {
+            startGame();
+        }
+    };
+
+    if (missionSelectionIndex >= 0 && players.length > 0) {
+        // Ensure player exists before rendering
+        const currentPlayer = players[missionSelectionIndex];
+        if (!currentPlayer) return null; // Should not happen
+
+        return (
+            <MissionSelection
+                key={currentPlayer.id} // Force re-render for new player
+                playerId={currentPlayer.id}
+                onComplete={handleMissionComplete}
+            />
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#2c1810] via-[#3d2415] to-[#2c1810] text-[#f0e6d2] flex flex-col items-center justify-center p-4 md:p-8">

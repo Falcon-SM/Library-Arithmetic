@@ -7,6 +7,10 @@ export enum TileType {
     SPECIAL_GEOMETRY = 'SPECIAL_GEOMETRY', // 特殊マス（幾何学）
     SPECIAL_ALGEBRA = 'SPECIAL_ALGEBRA', // 特殊マス（代数学）
     START = 'START', // スタートマス
+    LIBRARY = 'LIBRARY', // 図書館（閲覧室）
+    STUDY_ROOM = 'STUDY_ROOM', // 自習室
+    GARDEN = 'GARDEN', // 中庭
+    CAFETERIA = 'CAFETERIA', // カフェテリア
 }
 
 export enum Direction {
@@ -68,8 +72,10 @@ export interface EventCard {
 
 export interface BoardCard {
     id: string;
+    name: string; // e.g. "Straight Path", "Corner", "Library"
     connections: Direction[];
     specialType?: TileType; // If the card specifies a special tile type
+    description?: string;
 }
 
 export interface Player {
@@ -101,4 +107,5 @@ export interface GameState {
     highlightedTiles: string[];
     currentRoll: number | null;
     tileToPlace: Tile | null;
+    turnPhase: 'START' | 'ROLLED' | 'MOVING' | 'END'; // Strict turn phases
 }

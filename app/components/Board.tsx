@@ -97,16 +97,21 @@ export const Board: React.FC = () => {
                         height: 'max-content',
                     }}
                 >
-                    {board.map(tile => (
-                        <Tile
-                            key={tile.id}
-                            tile={{ ...tile, hasCat: catPosition?.x === tile.x && catPosition?.y === tile.y }}
-                            playersOnTile={players.filter(p => p.position.x === tile.x && p.position.y === tile.y).map(p => ({ id: p.id, color: p.color }))}
-                            isHighlight={highlightedTiles.includes(tile.id)}
-                            onClick={() => handleTileClick(tile.id)}
-                        />
-                    ))}
+                    {board.map(tile => {
+                        const isHighlight = highlightedTiles.includes(tile.id);
+                        const isCurrentPlayerTile = players.some(p => p.position.x === tile.x && p.position.y === tile.y);
+                        const hasCat = catPosition?.x === tile.x && catPosition?.y === tile.y;
 
+                        return (
+                            <Tile
+                                key={tile.id}
+                                tile={{ ...tile, hasCat }} // Merge hasCat into tile prop
+                                playersOnTile={players.filter(p => p.position.x === tile.x && p.position.y === tile.y)}
+                                onClick={isHighlight ? () => handleTileClick(tile.id) : undefined}
+                                isHighlight={isHighlight}
+                            />
+                        );
+                    })}
                     {validSpots.map(spot => (
                         <DroppableCell key={`${spot.x},${spot.y}`} x={spot.x} y={spot.y} isValid={true} />
                     ))}

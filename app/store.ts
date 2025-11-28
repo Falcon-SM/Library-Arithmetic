@@ -29,6 +29,10 @@ interface GameStore extends GameState {
     endTurn: () => void;
     useMathematicianCard: (playerId: string, cardId: string) => void;
     checkMissions: (playerId: string) => void;
+    distributeMissions: (playerId: string, missions: MissionCard[]) => void;
+    startGame: () => void;
+    drawMissionsFromDeck: (count: number) => MissionCard[];
+    returnMissionsToDeck: (missions: MissionCard[]) => void;
 }
 
 // Helper to shuffle arrays
@@ -60,6 +64,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     highlightedTiles: [],
     currentRoll: null,
     tileToPlace: null,
+    turnPhase: 'START', // Added turnPhase
+    // handBoardCards: [], // Removed handBoardCards
 
     initializeGame: (playerNames: string[]) => {
         console.log('Initializing game with players:', playerNames);
@@ -67,7 +73,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const mathDeck = shuffle([...MATHEMATICIAN_CARDS]);
         const missionDeck = shuffle([...MISSION_CARDS]);
         const eventDeck = shuffle([...EVENT_CARDS]);
-        const boardDeck = shuffle([...BOARD_CARDS]);
+        const boardDeck = shuffle([...BOARD_CARDS, ...BOARD_CARDS, ...BOARD_CARDS]); // Triple deck for more tiles
 
         // 2. Setup Board (Start Tile)
         const startTile: Tile = {
@@ -95,12 +101,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
             protected: false,
         }));
 
-        // Deal initial missions (2 per player)
-        players.forEach(p => {
-            p.missions.push(missionDeck.pop()!);
-            p.missions.push(missionDeck.pop()!);
-        });
-
         set({
             turn: 1,
             currentPlayerIndex: 0,
@@ -110,17 +110,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
             missionDeck,
             eventDeck,
             boardDeck,
-            gameStatus: 'PLAYING',
-            log: ['Game Started!'],
+            gameStatus: 'SETUP', // Keep in SETUP until missions are selected
+            log: ['Game Initialized. Starting Mission Selection...'],
             highlightedTiles: [],
             currentRoll: null,
             tileToPlace: null,
+            turnPhase: 'START',
         });
     },
 
     rollDice: () => {
-        const roll = Math.floor(Math.random() * 3) + 1;
         const state = get();
+        if (state.turnPhase !== 'START') return 0; // Only allow roll at start
+
+        const roll = Math.floor(Math.random() * 3) + 1;
         const currentPlayer = state.players[state.currentPlayerIndex];
         const currentTile = state.board.find(t => t.x === currentPlayer.position.x && t.y === currentPlayer.position.y);
 
@@ -132,32 +135,54 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({
             currentRoll: roll,
             highlightedTiles: reachable,
+            turnPhase: 'ROLLED', // Set turnPhase to ROLLED
             log: [...state.log, `${currentPlayer.name} rolled a ${roll}. Select a highlighted tile to move.`]
         });
 
         return roll;
     },
 
-    drawBoardTile: () => {
+    drawBoardTile: () => { // Renamed from drawBoardCards
         set(state => {
-            if (state.boardDeck.length === 0) return state;
-            const tileCard = state.boardDeck[0];
+            if (state.boardDeck.length === 0) {
+                return { log: [...state.log, 'No more tiles in deck!'] };
+            }
+
+            const card = state.boardDeck[0];
             const newDeck = state.boardDeck.slice(1);
 
-            // Convert card to tile format (temporary ID and position)
             const newTile: Tile = {
                 id: `tile-${Date.now()}`,
                 x: 0,
                 y: 0,
-                type: tileCard.specialType || TileType.NORMAL,
-                connections: tileCard.connections,
+                type: card.specialType || TileType.NORMAL,
+                connections: card.connections,
                 rotation: 0,
             };
 
             return {
                 boardDeck: newDeck,
                 tileToPlace: newTile,
-                log: [...state.log, 'Drew a new tile. Drag to place it.'],
+                log: [...state.log, `Drew ${card.name}. Drag to place it.`],
+            };
+        });
+    },
+
+    selectBoardCard: (card: BoardCard) => {
+        set(state => {
+            const newTile: Tile = {
+                id: `tile-${Date.now()}`,
+                x: 0,
+                y: 0,
+                type: card.specialType || TileType.NORMAL,
+                connections: card.connections,
+                rotation: 0,
+            };
+
+            return {
+                tileToPlace: newTile,
+                // handBoardCards: [], // Clear selection - this line is now obsolete
+                log: [...state.log, `Selected ${card.name}. Drag to place it.`],
             };
         });
     },
@@ -190,52 +215,99 @@ export const useGameStore = create<GameStore>((set, get) => ({
             // In real app, check connection match
 
             const newBoard = [...state.board, tile];
+
+            // Recalculate reachable tiles if we have an active roll
+            let newHighlightedTiles = state.highlightedTiles;
+            if (state.currentRoll) {
+                const currentPlayer = state.players[state.currentPlayerIndex];
+                const currentTile = newBoard.find(t => t.x === currentPlayer.position.x && t.y === currentPlayer.position.y);
+                if (currentTile) {
+                    newHighlightedTiles = getReachableTiles(currentTile, state.currentRoll, newBoard);
+                }
+            }
+
             return {
                 board: newBoard,
                 tileToPlace: null,
+                highlightedTiles: newHighlightedTiles,
                 log: [...state.log, `Placed tile at (${tile.x}, ${tile.y}).`],
             };
         });
     },
 
     movePlayer: (playerId, targetTileId) => {
+        const state = get();
+        // Validate move
+        if (!state.highlightedTiles.includes(targetTileId)) {
+            return; // Invalid move
+        }
+
+        const playerIndex = state.players.findIndex(p => p.id === playerId);
+        if (playerIndex === -1) return;
+
+        const targetTile = state.board.find(t => t.id === targetTileId);
+        if (!targetTile) return;
+
+        // 1. Move Player
         set(state => {
-            // Validate move
-            if (!state.highlightedTiles.includes(targetTileId)) {
-                return state; // Invalid move
-            }
-
-            const playerIndex = state.players.findIndex(p => p.id === playerId);
-            if (playerIndex === -1) return state;
-
-            const targetTile = state.board.find(t => t.id === targetTileId);
-            if (!targetTile) return state;
-
             const newPlayers = [...state.players];
             newPlayers[playerIndex] = {
                 ...newPlayers[playerIndex],
                 position: { x: targetTile.x, y: targetTile.y },
             };
-
-            let logMsg = `${newPlayers[playerIndex].name} moved to (${targetTile.x}, ${targetTile.y}).`;
-
-            // Tile Effects
-            if (targetTile.type === TileType.ARCHIVE) {
-                logMsg += ' Landed on Archive! (Draw Math Card)';
-                // Auto-draw for now or add button
-            } else if (targetTile.type === TileType.EVENT) {
-                logMsg += ' Landed on Event!';
-            }
-
             return {
                 players: newPlayers,
                 highlightedTiles: [], // Clear highlights
                 currentRoll: null, // Reset roll
-                log: [...state.log, logMsg],
+                turnPhase: 'END', // Move completed
+                log: [...state.log, `${newPlayers[playerIndex].name} moved to (${targetTile.x}, ${targetTile.y}).`],
             };
         });
 
-        // Check missions after move
+        // 2. Handle Tile Effects
+        const player = get().players[playerIndex]; // Get updated player
+        let effectLog = '';
+
+        switch (targetTile.type) {
+            case TileType.ARCHIVE:
+                effectLog = 'Landed on Archive! Drawing Mathematician Card...';
+                get().drawMathematicianCard(playerId);
+                break;
+            case TileType.EVENT:
+                effectLog = 'Landed on Event! Drawing Event Card...';
+                get().drawEventCard();
+                break;
+            case TileType.STUDY_ROOM:
+                set(state => {
+                    const newPlayers = [...state.players];
+                    newPlayers[playerIndex].mp = Math.min(newPlayers[playerIndex].mp + 2, 10);
+                    return { players: newPlayers };
+                });
+                effectLog = 'Study Room: Recovered 2 MP.';
+                break;
+            case TileType.LIBRARY:
+            case TileType.GARDEN:
+            case TileType.CAFETERIA:
+                set(state => {
+                    const newPlayers = [...state.players];
+                    newPlayers[playerIndex].mp = Math.min(newPlayers[playerIndex].mp + 1, 10);
+                    return { players: newPlayers };
+                });
+                effectLog = `${targetTile.type}: Recovered 1 MP.`;
+                break;
+            case TileType.SPECIAL_GEOMETRY:
+                effectLog = 'Landed on Geometry Lab.';
+                break;
+            case TileType.SPECIAL_ALGEBRA:
+                effectLog = 'Landed on Algebra Room.';
+                break;
+        }
+
+        if (effectLog) {
+            set(state => ({ log: [...state.log, effectLog] }));
+        }
+
+        // 3. Check Missions
         get().checkMissions(playerId);
     },
 
@@ -294,18 +366,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
             const availableTiles = state.board.filter(t => t.type !== TileType.START);
             if (availableTiles.length > 0) {
                 const target = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-                // Update tile to have cat? No, catPosition is in state.
-                // But Tile component checks tile.hasCat? 
-                // Wait, Tile interface has `hasCat`. But store has `catPosition`.
-                // I should sync them or just use `catPosition` in Board/Tile rendering.
-                // My Tile component uses `tile.hasCat`. 
-                // So I should update the board state OR update Tile component to check store.catPosition.
-                // Updating board state is cleaner for the Tile component props.
-
-                // Actually, let's just use catPosition in store and pass it to Tile in Board.tsx.
-                // But Tile.tsx takes `tile` prop.
-                // Let's update Board.tsx to pass `hasCat` prop based on store.catPosition.
-
                 extraUpdates = { catPosition: { x: target.x, y: target.y } };
             }
         }
@@ -340,6 +400,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
             return {
                 currentPlayerIndex: nextPlayerIndex,
                 turn: nextTurn,
+                currentRoll: null,
+                highlightedTiles: [],
+                tileToPlace: null,
+                turnPhase: 'START',
                 log: [...state.log, `Turn ${nextTurn}: ${state.players[nextPlayerIndex].name}'s turn.`],
             };
         });
@@ -368,29 +432,58 @@ export const useGameStore = create<GameStore>((set, get) => ({
             // Card Effects
             switch (card.id) {
                 case 'm-pascal': // MP +3
-                    newPlayers[playerIndex].mp += 3;
+                    newPlayers[playerIndex].mp = Math.min(newPlayers[playerIndex].mp + 3, 10); // Cap MP at 10?
                     logMsg += ' Recovered 3 MP.';
                     break;
-                case 'm-gauss': // Next dice 1 (Implementation: set flag? For now just log)
-                    logMsg += ' (Effect not fully implemented: Next dice 1)';
+
+                case 'm-pythagoras': // Warp to any tile in current "road" (simplified: Warp to any connected tile within 3 steps)
+                    // For simplicity in this version: Move 3 spaces ignoring obstacles
+                    // Better: Trigger a special "Warp Mode" where user clicks a tile. 
+                    // But for now, let's implement: "Roll a 6 immediately"
+                    // Or: "Teleport to Start"
+                    // Let's go with: "Recover full MP" for now as placeholder is weak.
+                    // Actually, let's implement "Warp to Start" as a safe haven.
+                    const startT = state.board.find(t => t.type === TileType.START);
+                    if (startT) {
+                        newPlayers[playerIndex].position = { x: startT.x, y: startT.y };
+                        logMsg += ' Warped to Start.';
+                    }
                     break;
-                case 'm-pythagoras': // Warp
-                    // For now, let's make it "Warp to Start" as a placeholder or "Warp to any tile" (need UI for target selection)
-                    // Let's just give +3 movement for now to keep it simple without target selection UI
-                    logMsg += ' (Effect simplified: Move +3 spaces)';
-                    // Logic to move would require target selection.
-                    break;
+
                 case 'm-einstein': // Warp to Event
                     const eventTiles = state.board.filter(t => t.type === TileType.EVENT);
                     if (eventTiles.length > 0) {
                         const target = eventTiles[Math.floor(Math.random() * eventTiles.length)];
                         newPlayers[playerIndex].position = { x: target.x, y: target.y };
                         logMsg += ` Warped to Event tile at (${target.x}, ${target.y}).`;
+                        // Trigger event?
+                        // Ideally we should trigger the event effect too.
+                        // But movePlayer handles landing logic. We just moved position.
+                        // We should probably call a helper to handle "Landing"
                     } else {
                         logMsg += ' No Event tiles to warp to.';
                     }
                     break;
-                // Add more cases as needed
+
+                case 'm-fibonacci': // Draw 3 cards
+                    if (state.mathematicianDeck.length >= 3) {
+                        const drawn = state.mathematicianDeck.slice(0, 3);
+                        newPlayers[playerIndex].hand.push(...drawn);
+                        extraUpdates = { mathematicianDeck: state.mathematicianDeck.slice(3) };
+                        logMsg += ' Drew 3 cards.';
+                    }
+                    break;
+
+                case 'm-gauss': // Next roll is 1 (Obstruction)
+                    // Need target selection UI. For now, apply to NEXT player.
+                    const nextPlayerIdx = (state.currentPlayerIndex + 1) % state.players.length;
+                    // We need a "debuff" state on players.
+                    // For now, let's just log it.
+                    logMsg += ` (Effect: Next player's roll will be 1 - Not fully implemented)`;
+                    break;
+
+                default:
+                    logMsg += ' (Effect not implemented yet)';
             }
 
             return {
@@ -469,5 +562,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 log: [...state.log, `${player.name} completed ${completedMissions.length} mission(s)!`],
             };
         });
+    },
+
+    distributeMissions: (playerId: string, missions: MissionCard[]) => {
+        set(state => {
+            const playerIndex = state.players.findIndex(p => p.id === playerId);
+            if (playerIndex === -1) return state;
+
+            const newPlayers = [...state.players];
+            newPlayers[playerIndex].missions = missions;
+
+            return {
+                players: newPlayers,
+                log: [...state.log, `${newPlayers[playerIndex].name} selected missions.`],
+            };
+        });
+    },
+
+    startGame: () => {
+        set({ gameStatus: 'PLAYING', log: ['Game Started!'] });
+    },
+
+    drawMissionsFromDeck: (count: number) => {
+        const state = get();
+        if (state.missionDeck.length < count) return [];
+        const drawn = state.missionDeck.slice(0, count);
+        set({ missionDeck: state.missionDeck.slice(count) });
+        return drawn;
+    },
+
+    returnMissionsToDeck: (missions: MissionCard[]) => {
+        set(state => ({
+            missionDeck: [...state.missionDeck, ...missions]
+        }));
     }
 }));

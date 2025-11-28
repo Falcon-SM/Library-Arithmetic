@@ -6,15 +6,15 @@
 }
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --foreground-rgb: 20, 20, 20;
+  --background-start-rgb: 240, 240, 245;
   --background-end-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
+    --foreground-rgb: 240, 240, 240;
+    --background-start-rgb: 15, 15, 15;
     --background-end-rgb: 0, 0, 0;
   }
 }
@@ -24,6 +24,15 @@ body {
   background: linear-gradient(to bottom,
       transparent,
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+}
+
+/* High contrast utility classes */
+.text-high-contrast {
+  color: rgb(20, 20, 20) !important;
+}
+
+.bg-high-contrast {
+  background-color: rgb(255, 255, 255) !important;
 }
 
 @layer utilities {
