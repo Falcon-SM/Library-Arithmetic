@@ -98,4 +98,7 @@ export interface GameState {
     catPosition: { x: number; y: number } | null; // If cat is on board
     gameStatus: 'SETUP' | 'PLAYING' | 'FINISHED';
     log: string[];
+    highlightedTiles: string[];
+    currentRoll: number | null;
+    tileToPlace: Tile | null;
 }

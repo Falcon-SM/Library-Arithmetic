@@ -11,47 +11,52 @@ export const PlayerHUD: React.FC = () => {
     if (!currentPlayer) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-64 bg-white/95 border-t-4 border-[#2c1810] p-4 flex gap-8 shadow-2xl z-50">
+        <div className="fixed bottom-0 left-0 right-0 h-auto max-h-[40vh] bg-white/95 border-t-4 border-[#2c1810] p-2 md:p-4 flex flex-col md:flex-row gap-4 md:gap-8 shadow-2xl z-50 overflow-hidden">
             {/* Stats Panel */}
-            <div className="w-48 flex-shrink-0 flex flex-col gap-2 border-r pr-4">
-                <div className="flex items-center gap-2 text-xl font-bold" style={{ color: currentPlayer.color }}>
-                    <User /> {currentPlayer.name}
+            <div className="w-full md:w-48 flex-shrink-0 flex flex-row md:flex-col justify-between md:justify-start gap-2 border-b md:border-b-0 md:border-r pb-2 md:pb-0 md:pr-4">
+                <div className="flex items-center gap-2 text-lg md:text-xl font-bold" style={{ color: currentPlayer.color }}>
+                    <User className="w-5 h-5" /> {currentPlayer.name}
                 </div>
-                <div className="flex items-center gap-2 text-blue-600 font-bold text-lg">
-                    <Zap /> MP: {currentPlayer.mp}
-                </div>
-                <div className="flex items-center gap-2 text-amber-600 font-bold text-lg">
-                    <Trophy /> Score: {currentPlayer.completedMissions.reduce((acc, m) => acc + m.points, 0)}
-                </div>
-            </div>
-
-            {/* Hand */}
-            <div className="flex-1 overflow-x-auto">
-                <h4 className="font-bold text-gray-500 mb-2">Hand (Mathematicians)</h4>
-                <div className="flex gap-2">
-                    {currentPlayer.hand.map(card => (
-                        <Card
-                            key={card.id}
-                            card={card}
-                            type={CardType.MATHEMATICIAN}
-                            onClick={() => useMathematicianCard(currentPlayer.id, card.id)}
-                        />
-                    ))}
-                    {currentPlayer.hand.length === 0 && <div className="text-gray-400 text-sm italic">No cards in hand</div>}
+                <div className="flex gap-4 md:flex-col md:gap-2">
+                    <div className="flex items-center gap-2 text-blue-600 font-bold text-base md:text-lg">
+                        <Zap className="w-4 h-4" /> MP: {currentPlayer.mp}
+                    </div>
+                    <div className="flex items-center gap-2 text-amber-600 font-bold text-base md:text-lg">
+                        <Trophy className="w-4 h-4" /> Score: {currentPlayer.completedMissions.reduce((acc, m) => acc + m.points, 0)}
+                    </div>
                 </div>
             </div>
 
-            {/* Missions */}
-            <div className="flex-1 overflow-x-auto border-l pl-4">
-                <h4 className="font-bold text-gray-500 mb-2">Active Missions</h4>
-                <div className="flex gap-2">
-                    {currentPlayer.missions.map(card => (
-                        <Card
-                            key={card.id}
-                            card={card}
-                            type={CardType.MISSION}
-                        />
-                    ))}
+            {/* Scrollable Area for Hand and Missions */}
+            <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
+                {/* Hand */}
+                <div className="flex-1 overflow-x-auto min-h-[100px]">
+                    <h4 className="font-bold text-gray-500 mb-1 text-xs uppercase tracking-wider">Hand</h4>
+                    <div className="flex gap-2 pb-2">
+                        {currentPlayer.hand.map(card => (
+                            <Card
+                                key={card.id}
+                                card={card}
+                                type={CardType.MATHEMATICIAN}
+                                onClick={() => useMathematicianCard(currentPlayer.id, card.id)}
+                            />
+                        ))}
+                        {currentPlayer.hand.length === 0 && <div className="text-gray-400 text-sm italic p-2">No cards</div>}
+                    </div>
+                </div>
+
+                {/* Missions */}
+                <div className="flex-1 overflow-x-auto border-t md:border-t-0 md:border-l pt-2 md:pt-0 md:pl-4 min-h-[100px]">
+                    <h4 className="font-bold text-gray-500 mb-1 text-xs uppercase tracking-wider">Missions</h4>
+                    <div className="flex gap-2 pb-2">
+                        {currentPlayer.missions.map(card => (
+                            <Card
+                                key={card.id}
+                                card={card}
+                                type={CardType.MISSION}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
