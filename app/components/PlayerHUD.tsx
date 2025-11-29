@@ -3,6 +3,35 @@ import { useGameStore } from '../store';
 import { Card } from './Card';
 import { CardType } from '../types';
 import { User, Zap, Trophy } from 'lucide-react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import type { MissionCard } from '../types';
+
+// Draggable wrapper for Mission cards
+const DraggableMissionCard: React.FC<{ card: MissionCard }> = ({ card }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: `mission-${card.id}`,
+        data: { type: 'mission', card },
+    });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        opacity: isDragging ? 0.5 : 1,
+        cursor: 'grab',
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...listeners}
+            {...attributes}
+            className="transition-opacity"
+        >
+            <Card card={card} type={CardType.MISSION} />
+        </div>
+    );
+};
 
 export const PlayerHUD: React.FC = () => {
     const { players, currentPlayerIndex, useMathematicianCard } = useGameStore();
@@ -45,16 +74,15 @@ export const PlayerHUD: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Missions */}
+                {/* Missions - Now Draggable */}
                 <div className="flex-1 overflow-x-auto border-t md:border-t-0 md:border-l pt-2 md:pt-0 md:pl-4 min-h-[100px]">
-                    <h4 className="font-bold text-gray-500 mb-1 text-xs uppercase tracking-wider">Missions</h4>
+                    <h4 className="font-bold text-gray-500 mb-1 text-xs uppercase tracking-wider">
+                        Missions
+                        <span className="ml-2 text-[10px] text-gray-400 normal-case">(drag to use)</span>
+                    </h4>
                     <div className="flex gap-2 pb-2">
                         {currentPlayer.missions.map(card => (
-                            <Card
-                                key={card.id}
-                                card={card}
-                                type={CardType.MISSION}
-                            />
+                            <DraggableMissionCard key={card.id} card={card} />
                         ))}
                     </div>
                 </div>

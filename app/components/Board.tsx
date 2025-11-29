@@ -17,10 +17,36 @@ export const Board: React.FC = () => {
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        const { over } = event;
-        if (over && tileToPlace) {
+        const { over, active } = event;
+
+        if (!over) return;
+
+        // Check if this is a tile placement
+        if (tileToPlace && active.id === 'draggable-tile') {
             const { x, y } = over.data.current as { x: number; y: number };
             placeTile({ ...tileToPlace, x, y });
+            return;
+        }
+
+        // Check if this is a mission card drag
+        const dragData = active.data.current as { type?: string; card?: any };
+        if (dragData?.type === 'mission') {
+            // For now, just log that a mission card was dragged
+            // In a full implementation, you would trigger mission-specific effects here
+            console.log('Mission card dragged:', dragData.card);
+
+            // You could add mission card effects here based on the card's category or ID
+            // For example:
+            // - COLLECTION missions: might not be draggable (they auto-complete)
+            // - Some missions might have special drag effects
+
+            // Since missions are mainly achievement-based, dragging might be used for:
+            // - Discarding a mission to draw a new one
+            // - Trading missions with other players
+            // - Or custom effects per mission
+
+            // For this implementation, we'll just show a visual feedback
+            console.log('Mission card drop detected - implement custom logic as needed');
         }
     };
 

@@ -10,7 +10,7 @@ interface MissionSelectionProps {
     onComplete: () => void;
 }
 
-const DraggableMissionCard: React.FC<{ mission: MissionCard; isSelected: boolean }> = ({ mission, isSelected }) => {
+const DraggableMissionCard: React.FC<{ mission: MissionCard; isSelected: boolean; onSelect: () => void }> = ({ mission, isSelected, onSelect }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: mission.id,
     });
@@ -27,9 +27,10 @@ const DraggableMissionCard: React.FC<{ mission: MissionCard; isSelected: boolean
             style={style}
             {...listeners}
             {...attributes}
+            onClick={onSelect}
             className={`transform transition-all duration-300 ${isSelected
-                    ? 'scale-105 ring-4 ring-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)] z-10'
-                    : 'hover:scale-105 opacity-90 hover:opacity-100 hover:shadow-xl'
+                ? 'scale-105 ring-4 ring-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)] z-10'
+                : 'hover:scale-105 opacity-90 hover:opacity-100 hover:shadow-xl'
                 }`}
         >
             <Card card={mission} type={CardType.MISSION} />
@@ -46,13 +47,13 @@ const DropZone: React.FC<{ selectedCount: number }> = ({ selectedCount }) => {
         <div
             ref={setNodeRef}
             className={`w-full max-w-2xl h-48 border-4 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${isOver
-                    ? 'border-green-500 bg-green-500/20 scale-105'
-                    : 'border-white/40 bg-white/10'
+                ? 'border-green-500 bg-green-500/20 scale-105'
+                : 'border-white/40 bg-white/10'
                 }`}
         >
             <div className="text-center">
                 <p className="text-white text-2xl font-bold mb-2">
-                    {selectedCount === 0 ? '📋 Drag missions here' : `✅ ${selectedCount}/2 missions selected`}
+                    {selectedCount === 0 ? '📋 Drag or Click missions below' : `✅ ${selectedCount}/2 missions selected`}
                 </p>
                 <p className="text-white/70 text-sm">
                     {selectedCount < 2 ? `Select ${2 - selectedCount} more` : 'Ready to confirm!'}
@@ -73,18 +74,21 @@ export const MissionSelection: React.FC<MissionSelectionProps> = ({ playerId, on
         setCandidates(drawn);
     }, []);
 
+    const toggleSelection = (missionId: string) => {
+        // Toggle selection
+        if (selectedIds.includes(missionId)) {
+            setSelectedIds(selectedIds.filter(id => id !== missionId));
+        } else if (selectedIds.length < 2) {
+            setSelectedIds([...selectedIds, missionId]);
+        }
+    };
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (over && over.id === 'mission-drop-zone' && active.id) {
             const missionId = active.id as string;
-
-            // Toggle selection
-            if (selectedIds.includes(missionId)) {
-                setSelectedIds(selectedIds.filter(id => id !== missionId));
-            } else if (selectedIds.length < 2) {
-                setSelectedIds([...selectedIds, missionId]);
-            }
+            toggleSelection(missionId);
         }
     };
 
@@ -110,7 +114,7 @@ export const MissionSelection: React.FC<MissionSelectionProps> = ({ playerId, on
                     </h2>
                     <p className="text-xl md:text-2xl text-white/90">
                         <span style={{ color: player.color }} className="font-bold drop-shadow-md">{player.name}</span>,
-                        drag <span className="text-amber-400 font-bold">2 missions</span> to the drop zone below.
+                        <span className="text-amber-400 font-bold"> click or drag 2 missions</span> to select them.
                     </p>
                 </div>
 
@@ -126,6 +130,7 @@ export const MissionSelection: React.FC<MissionSelectionProps> = ({ playerId, on
                             key={mission.id}
                             mission={mission}
                             isSelected={selectedIds.includes(mission.id)}
+                            onSelect={() => toggleSelection(mission.id)}
                         />
                     ))}
                 </div>
@@ -134,8 +139,8 @@ export const MissionSelection: React.FC<MissionSelectionProps> = ({ playerId, on
                     onClick={handleConfirm}
                     disabled={selectedIds.length !== 2}
                     className={`px-10 py-4 rounded-full text-xl font-bold transition-all duration-300 transform ${selectedIds.length === 2
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-400 hover:to-emerald-500 shadow-lg hover:shadow-green-500/50 scale-105 hover:scale-110'
-                            : 'bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600'
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-400 hover:to-emerald-500 shadow-lg hover:shadow-green-500/50 scale-105 hover:scale-110'
+                        : 'bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600'
                         }`}
                 >
                     {selectedIds.length === 2 ? '✅ Confirm Selection' : `Select ${2 - selectedIds.length} more mission(s)`}

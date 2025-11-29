@@ -128,15 +128,24 @@ export const BOARD_CARDS: BoardCard[] = [
     { id: 'b-straight', name: 'Corridor', connections: [Direction.TOP, Direction.BOTTOM], description: 'A straight hallway.' },
     { id: 'b-corner', name: 'Corner', connections: [Direction.TOP, Direction.RIGHT], description: 'A turn in the path.' },
 
-    // Special Rooms
+    // Special Rooms - Archives (書庫マス)
     { id: 'b-archive', name: 'Archive', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.ARCHIVE, description: 'Draw a Mathematician Card.' },
-    { id: 'b-event', name: 'Event Hall', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT], specialType: TileType.EVENT, description: 'Trigger a random event.' },
-    { id: 'b-geo', name: 'Geometry Lab', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_GEOMETRY, description: 'Special Geometry effects.' },
-    { id: 'b-alg', name: 'Algebra Room', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_ALGEBRA, description: 'Special Algebra effects.' },
+    { id: 'b-archive-2', name: 'Archive Corner', connections: [Direction.TOP, Direction.RIGHT], specialType: TileType.ARCHIVE, description: 'Draw a Mathematician Card.' },
+    { id: 'b-archive-3', name: 'Archive Cross', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.ARCHIVE, description: 'Draw a Mathematician Card.' },
 
-    // New Rooms
-    { id: 'b-library', name: 'Reading Room', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.LIBRARY, description: 'A quiet place to study.' },
-    { id: 'b-study', name: 'Study Room', connections: [Direction.RIGHT, Direction.LEFT], specialType: TileType.STUDY_ROOM, description: 'Focus and recover MP.' },
-    { id: 'b-garden', name: 'Courtyard', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.GARDEN, description: 'A peaceful garden.' },
-    { id: 'b-cafeteria', name: 'Cafeteria', connections: [Direction.TOP, Direction.RIGHT], specialType: TileType.CAFETERIA, description: 'Grab a coffee.' },
+    // Special Rooms - Events (イベントマス)
+    { id: 'b-event', name: 'Event Hall', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT], specialType: TileType.EVENT, description: 'Trigger a random event.' },
+    { id: 'b-event-2', name: 'Event Corridor', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.EVENT, description: 'Trigger a random event.' },
+
+    // Special Rooms - Geometry & Algebra (特殊マス)
+    { id: 'b-geo', name: 'Geometry Lab', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_GEOMETRY, description: 'Special Geometry effects.' },
+    { id: 'b-geo-2', name: 'Geometry Corner', connections: [Direction.RIGHT, Direction.BOTTOM], specialType: TileType.SPECIAL_GEOMETRY, description: 'Special Geometry effects.' },
+    { id: 'b-alg', name: 'Algebra Room', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.SPECIAL_ALGEBRA, description: 'Special Algebra effects.' },
+    { id: 'b-alg-2', name: 'Algebra T-Junction', connections: [Direction.TOP, Direction.RIGHT, Direction.LEFT], specialType: TileType.SPECIAL_ALGEBRA, description: 'Special Algebra effects.' },
+
+    // Comfort Rooms (回復マス)
+    { id: 'b-library', name: 'Reading Room', connections: [Direction.TOP, Direction.BOTTOM], specialType: TileType.LIBRARY, description: 'A quiet place to study. Recover 1 MP.' },
+    { id: 'b-study', name: 'Study Room', connections: [Direction.RIGHT, Direction.LEFT], specialType: TileType.STUDY_ROOM, description: 'Focus and recover 2 MP.' },
+    { id: 'b-garden', name: 'Courtyard', connections: [Direction.TOP, Direction.RIGHT, Direction.BOTTOM, Direction.LEFT], specialType: TileType.GARDEN, description: 'A peaceful garden. Recover 1 MP.' },
+    { id: 'b-cafeteria', name: 'Cafeteria', connections: [Direction.TOP, Direction.RIGHT], specialType: TileType.CAFETERIA, description: 'Grab a coffee. Recover 1 MP.' },
 ];
