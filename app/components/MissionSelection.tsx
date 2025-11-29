@@ -28,7 +28,7 @@ const DraggableMissionCard: React.FC<{ mission: MissionCard; isSelected: boolean
             {...listeners}
             {...attributes}
             onClick={onSelect}
-            className={`transform transition-all duration-300 ${isSelected
+            className={`transform transition-all duration-300 select-none ${isSelected
                 ? 'scale-105 ring-4 ring-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)] z-10'
                 : 'hover:scale-105 opacity-90 hover:opacity-100 hover:shadow-xl'
                 }`}

@@ -3,7 +3,7 @@ import { useGameStore } from '../store';
 import { Dices, SkipForward, PlusSquare } from 'lucide-react';
 
 export const GameControls: React.FC = () => {
-    const { rollDice, endTurn, log, turn, tileToPlace, drawBoardTile, currentRoll, highlightedTiles, turnPhase } = useGameStore();
+    const { rollDice, endTurn, log, turn, tileToPlace, drawBoardTile, currentRoll, highlightedTiles, turnPhase, tilesPlacedThisTurn } = useGameStore();
 
     const handleRoll = () => {
         rollDice();
@@ -35,7 +35,10 @@ export const GameControls: React.FC = () => {
                                 {currentRoll}
                             </div>
                             <div className="mt-2 text-sm md:text-base text-amber-100 font-semibold">
-                                {highlightedTiles.length > 0 ? `${highlightedTiles.length} moves available` : 'No moves'}
+                                Place up to {currentRoll} tiles
+                            </div>
+                            <div className="mt-1 text-lg md:text-xl text-white font-bold bg-amber-900/30 rounded-full px-4 py-1">
+                                {tilesPlacedThisTurn}/{currentRoll}
                             </div>
                         </div>
                     </div>
@@ -56,23 +59,21 @@ export const GameControls: React.FC = () => {
                         </button>
                         <button
                             onClick={endTurn}
-                            disabled={turnPhase === 'START' || turnPhase === 'ROLLED'} // Must move or act before ending
+                            disabled={turnPhase === 'START'}
                             className="flex-1 bg-gray-600 text-white py-2 rounded hover:bg-gray-700 flex items-center justify-center gap-2 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                         >
                             <SkipForward className="w-4 h-4 md:w-5 md:h-5" /> End
                         </button>
                     </div>
 
-                    {/* Draw Tile Button (if stuck or just want to place) */}
-                    {/* Logic: Can draw if rolled but no moves (stuck) */}
-                    {turnPhase === 'ROLLED' && highlightedTiles.length === 0 && !tileToPlace && (
+                    {/* Draw Tile Button - Always show during PLACING phase */}
+                    {turnPhase === 'PLACING' && currentRoll && tilesPlacedThisTurn < currentRoll && !tileToPlace && (
                         <div className="mb-2 md:mb-4">
-                            <p className="text-red-600 text-xs font-bold mb-1 text-center animate-pulse">No moves available!</p>
                             <button
                                 onClick={drawBoardTile}
-                                className="w-full bg-amber-600 text-white py-2 rounded hover:bg-amber-700 flex items-center justify-center gap-2 font-bold shadow animate-pulse text-sm md:text-base"
+                                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 flex items-center justify-center gap-2 font-bold shadow text-sm md:text-base"
                             >
-                                <PlusSquare className="w-4 h-4" /> Draw Tile
+                                <PlusSquare className="w-4 h-4" /> Draw Tile ({tilesPlacedThisTurn}/{currentRoll})
                             </button>
                         </div>
                     )}

@@ -64,6 +64,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     highlightedTiles: [],
     currentRoll: null,
     tileToPlace: null,
+    tilesPlacedThisTurn: 0,
     turnPhase: 'START', // Added turnPhase
     // handBoardCards: [], // Removed handBoardCards
 
@@ -115,6 +116,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             highlightedTiles: [],
             currentRoll: null,
             tileToPlace: null,
+            tilesPlacedThisTurn: 0,
             turnPhase: 'START',
         });
     },
@@ -135,8 +137,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({
             currentRoll: roll,
             highlightedTiles: reachable,
-            turnPhase: 'ROLLED', // Set turnPhase to ROLLED
-            log: [...state.log, `${currentPlayer.name} rolled a ${roll}. Select a highlighted tile to move.`]
+            tilesPlacedThisTurn: 0, // Reset tile placement counter
+            turnPhase: 'PLACING', // Allow tile placement
+            log: [...state.log, `${currentPlayer.name} rolled a ${roll}. You can place up to ${roll} tiles.`]
         });
 
         return roll;
@@ -146,6 +149,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set(state => {
             if (state.boardDeck.length === 0) {
                 return { log: [...state.log, 'No more tiles in deck!'] };
+            }
+
+            // Check if player can still place tiles this turn
+            if (state.currentRoll !== null && state.tilesPlacedThisTurn >= state.currentRoll) {
+                return {
+                    log: [...state.log, `You've already placed ${state.currentRoll} tile(s) this turn!`]
+                };
             }
 
             const card = state.boardDeck[0];
@@ -163,7 +173,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             return {
                 boardDeck: newDeck,
                 tileToPlace: newTile,
-                log: [...state.log, `Drew ${card.name}. Drag to place it.`],
+                log: [...state.log, `Drew ${card.name}. Drag to place it. (${state.tilesPlacedThisTurn + 1}/${state.currentRoll || '?'})`],
             };
         });
     },
@@ -215,6 +225,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             // In real app, check connection match
 
             const newBoard = [...state.board, tile];
+            const newTilesPlaced = state.tilesPlacedThisTurn + 1;
 
             // Recalculate reachable tiles if we have an active roll
             let newHighlightedTiles = state.highlightedTiles;
@@ -226,11 +237,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 }
             }
 
+            const canPlaceMore = state.currentRoll ? newTilesPlaced < state.currentRoll : true;
+            const statusMsg = canPlaceMore
+                ? `Placed tile at (${tile.x}, ${tile.y}). ${state.currentRoll ? `(${newTilesPlaced}/${state.currentRoll})` : ''}`
+                : `Placed tile at (${tile.x}, ${tile.y}). You've placed all ${state.currentRoll} tiles!`;
+
             return {
                 board: newBoard,
                 tileToPlace: null,
+                tilesPlacedThisTurn: newTilesPlaced,
                 highlightedTiles: newHighlightedTiles,
-                log: [...state.log, `Placed tile at (${tile.x}, ${tile.y}).`],
+                log: [...state.log, statusMsg],
             };
         });
     },
@@ -403,6 +420,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 currentRoll: null,
                 highlightedTiles: [],
                 tileToPlace: null,
+                tilesPlacedThisTurn: 0, // Reset tile placement counter
                 turnPhase: 'START',
                 log: [...state.log, `Turn ${nextTurn}: ${state.players[nextPlayerIndex].name}'s turn.`],
             };

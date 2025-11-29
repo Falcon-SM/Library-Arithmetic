@@ -26,7 +26,7 @@ const DraggableMissionCard: React.FC<{ card: MissionCard }> = ({ card }) => {
             style={style}
             {...listeners}
             {...attributes}
-            className="transition-opacity"
+            className="transition-opacity select-none"
         >
             <Card card={card} type={CardType.MISSION} />
         </div>

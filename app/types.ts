@@ -107,5 +107,6 @@ export interface GameState {
     highlightedTiles: string[];
     currentRoll: number | null;
     tileToPlace: Tile | null;
-    turnPhase: 'START' | 'ROLLED' | 'MOVING' | 'END'; // Strict turn phases
+    tilesPlacedThisTurn: number; // Track how many tiles placed this turn
+    turnPhase: 'START' | 'ROLLED' | 'PLACING' | 'MOVING' | 'END'; // Strict turn phases
 }
