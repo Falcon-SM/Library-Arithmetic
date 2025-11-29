@@ -93,25 +93,30 @@ export default function App() {
     setSpinning(true);
     setResult(null);
 
-    // 1. 停止するイベントをランダムに決定
-    const targetEventIndex = Math.floor(Math.random() * events.length);
-    const targetEvent = events[targetEventIndex];
-
-    // 2. リール（繰り返し配列）の「中央」セクションでそのイベントが停止するようにインデックスを計算
-    //    こうすることで、常に前後に十分なスクロール要素が確保される
+    // 1. リール（繰り返し配列）の「中央」セクションの開始インデックスを計算
     const reelOffset = events.length * Math.floor(REEL_REPETITIONS / 2);
-    const targetReelIndex = reelOffset + targetEventIndex;
+    
+    // 2. 中央セクション内で停止するランダムな「相対インデックス」を決定
+    const targetInBlockIndex = Math.floor(Math.random() * events.length);
+    
+    // 3. リール全体での「絶対インデックス」を計算
+    const targetReelIndex = reelOffset + targetInBlockIndex;
+    
+    // 4. 停止するイベントを「shuffledReel」から直接取得
+    //    これが視覚的に停止するイベントであり、結果として表示するイベント
+    //    (バグ修正：シャッフル前の events 配列から選んでいたのを修正)
+    const targetEvent = shuffledReel[targetReelIndex];
 
-    // 3. 停止位置のY座標を計算
+    // 5. 停止位置のY座標を計算
     //    ウィンドウの中央に停止するように調整
     const centerOffset = (ROULETTE_WINDOW_HEIGHT / 2) - (EVENT_ITEM_HEIGHT / 2);
     const targetY = -(targetReelIndex * EVENT_ITEM_HEIGHT) + centerOffset;
 
-    // 4. 最終停止位置に少しランダムな「ブレ」を追加して、毎回同じ場所に見えないようにする
+    // 6. 最終停止位置に少しランダムな「ブレ」を追加して、毎回同じ場所に見えないようにする
     const wobble = (Math.random() - 0.5) * (EVENT_ITEM_HEIGHT * 0.8);
     const finalY = targetY + wobble;
 
-    // 5. アニメーションの「巻き戻り」を防ぐため、一度トランジションを切り、
+    // 7. アニメーションの「巻き戻り」を防ぐため、一度トランジションを切り、
     //    リールの現在位置に近い（ように見える）開始位置にリセットする
     const startReelIndex = events.length * (Math.floor(REEL_REPETITIONS / 2) - 1);
     const startY = -(startReelIndex * EVENT_ITEM_HEIGHT) + centerOffset;
@@ -131,7 +136,7 @@ export default function App() {
       });
     }, 10); // 10msの遅延
 
-    // 7. アニメーションが終了するタイミングで、結果をセットし、スピニング状態を解除
+    // 9. アニメーションが終了するタイミングで、結果をセットし、スピニング状態を解除
     //    onTransitionEndは不安定な場合があるため、setTimeoutで時間を管理する
     setTimeout(() => {
       setSpinning(false);
@@ -203,13 +208,13 @@ export default function App() {
           </button>
         </div>
 
-        {/* --- 結果表示 --- */}
+        {/* --- 結果表示 (修正箇所) --- */}
         {/* (TS) 'result' はここで Event 型だと正しく推論されます */}
         {result && !spinning && (
-          <div className="mt-6 p-5 bg-gray-800 border-2 border-cyan-400 rounded-lg shadow-xl text-left animate-fade-in">
-            <h2 className="text-2xl font-bold mb-3 text-cyan-400 text-center">{result.title}</h2>
-            <p className="text-lg mb-2 text-center text-gray-300">{result.type}</p>
-            <p className="text-gray-200 mt-4">{result.effect}</p>
+          <div className="mt-6 p-5 bg-gray-800 border-2 border-cyan-400 rounded-lg shadow-xl text-center animate-fade-in">
+            <h2 className="text-2xl font-bold mb-3 text-cyan-400">{result.title}</h2>
+            <p className="text-lg mb-2 text-gray-300">{result.type}</p>
+            <p className="text-gray-200 mt-4 text-left">{result.effect}</p>
           </div>
         )}
       </div>
