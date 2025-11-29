@@ -61,14 +61,19 @@ export const GameControls: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Draw Tile Button - Show when no moves available */}
-                    {turnPhase === 'ROLLED' && highlightedTiles.length === 0 && !tileToPlace && (
+                    {/* Draw Tile Button - Show during ROLLED phase when no tile is being placed */}
+                    {turnPhase === 'ROLLED' && !tileToPlace && (
                         <div className="mb-2 md:mb-4">
-                            <p className="text-red-600 text-xs font-bold mb-1 text-center animate-pulse">No moves available!</p>
+                            {highlightedTiles.length === 0 && (
+                                <p className="text-red-600 text-xs font-bold mb-1 text-center animate-pulse">No moves available!</p>
+                            )}
                             <button
                                 onClick={drawBoardTile}
-                                className="w-full bg-amber-600 text-white py-2 rounded hover:bg-amber-700 flex items-center justify-center gap-2 font-bold shadow animate-pulse text-sm md:text-base">
-                                <PlusSquare className="w-4 h-4" /> Draw Tile
+                                className={`w-full text-white py-2 rounded flex items-center justify-center gap-2 font-bold shadow text-sm md:text-base ${highlightedTiles.length === 0
+                                        ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
+                                        : 'bg-green-600 hover:bg-green-700'
+                                    }`}>
+                                <PlusSquare className="w-4 h-4" /> {highlightedTiles.length === 0 ? 'Draw Tile' : 'Add Tile'}
                             </button>
                         </div>
                     )}

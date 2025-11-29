@@ -219,7 +219,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
             // In real app, check connection match
 
             const newBoard = [...state.board, tile];
-            const newTilesPlaced = state.tilesPlacedThisTurn + 1;
 
             // Recalculate reachable tiles if we have an active roll
             let newHighlightedTiles = state.highlightedTiles;
@@ -231,17 +230,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 }
             }
 
-            const canPlaceMore = state.currentRoll ? newTilesPlaced < state.currentRoll : true;
-            const statusMsg = canPlaceMore
-                ? `Placed tile at (${tile.x}, ${tile.y}). ${state.currentRoll ? `(${newTilesPlaced}/${state.currentRoll})` : ''}`
-                : `Placed tile at (${tile.x}, ${tile.y}). You've placed all ${state.currentRoll} tiles!`;
-
             return {
                 board: newBoard,
                 tileToPlace: null,
-                tilesPlacedThisTurn: newTilesPlaced,
                 highlightedTiles: newHighlightedTiles,
-                log: [...state.log, statusMsg],
+                log: [...state.log, `Placed tile at (${tile.x}, ${tile.y}).`],
             };
         });
     },
