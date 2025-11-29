@@ -28,6 +28,7 @@ interface GameStore extends GameState {
     placeTile: (tile: Tile) => void;
     endTurn: () => void;
     useMathematicianCard: (playerId: string, cardId: string) => void;
+    useMissionCard: (playerId: string, cardId: string) => void; // New action
     checkMissions: (playerId: string) => void;
     distributeMissions: (playerId: string, missions: MissionCard[]) => void;
     startGame: () => void;
@@ -137,9 +138,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({
             currentRoll: roll,
             highlightedTiles: reachable,
-            tilesPlacedThisTurn: 0, // Reset tile placement counter
-            turnPhase: 'PLACING', // Allow tile placement
-            log: [...state.log, `${currentPlayer.name} rolled a ${roll}. You can place up to ${roll} tiles.`]
+            tilesPlacedThisTurn: 0,
+            turnPhase: 'ROLLED', // Ready to move
+            log: [...state.log, `${currentPlayer.name} rolled a ${roll}. ${reachable.length > 0 ? 'Click a highlighted tile to move.' : 'No moves available - draw a tile!'}`]
         });
 
         return roll;
@@ -149,13 +150,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set(state => {
             if (state.boardDeck.length === 0) {
                 return { log: [...state.log, 'No more tiles in deck!'] };
-            }
-
-            // Check if player can still place tiles this turn
-            if (state.currentRoll !== null && state.tilesPlacedThisTurn >= state.currentRoll) {
-                return {
-                    log: [...state.log, `You've already placed ${state.currentRoll} tile(s) this turn!`]
-                };
             }
 
             const card = state.boardDeck[0];
@@ -173,7 +167,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             return {
                 boardDeck: newDeck,
                 tileToPlace: newTile,
-                log: [...state.log, `Drew ${card.name}. Drag to place it. (${state.tilesPlacedThisTurn + 1}/${state.currentRoll || '?'})`],
+                log: [...state.log, `Drew ${card.name}. Drag to place it.`],
             };
         });
     },
@@ -613,5 +607,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set(state => ({
             missionDeck: [...state.missionDeck, ...missions]
         }));
+    },
+
+    useMissionCard: (playerId: string, cardId: string) => {
+        set(state => {
+            const playerIndex = state.players.findIndex(p => p.id === playerId);
+            if (playerIndex === -1) return state;
+
+            const player = state.players[playerIndex];
+            const card = player.missions.find(c => c.id === cardId);
+            if (!card) return state;
+
+            // For now, just log that the mission card was used
+            // In future, implement specific mission card effects
+            return {
+                log: [...state.log, `${player.name} double-clicked mission card: ${card.title} (no effect yet)`]
+            };
+        });
     }
 }));

@@ -14,10 +14,19 @@ const DraggableMissionCard: React.FC<{ card: MissionCard }> = ({ card }) => {
         data: { type: 'mission', card },
     });
 
+    const { useMissionCard, currentPlayerIndex, players } = useGameStore();
+    const currentPlayer = players[currentPlayerIndex];
+
     const style = {
         transform: CSS.Translate.toString(transform),
         opacity: isDragging ? 0.5 : 1,
         cursor: 'grab',
+    };
+
+    const handleDoubleClick = () => {
+        if (currentPlayer) {
+            useMissionCard(currentPlayer.id, card.id);
+        }
     };
 
     return (
@@ -26,6 +35,7 @@ const DraggableMissionCard: React.FC<{ card: MissionCard }> = ({ card }) => {
             style={style}
             {...listeners}
             {...attributes}
+            onDoubleClick={handleDoubleClick}
             className="transition-opacity select-none"
         >
             <Card card={card} type={CardType.MISSION} />

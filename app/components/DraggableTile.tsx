@@ -20,7 +20,7 @@ export const DraggableTile: React.FC<DraggableTileProps> = ({ tile, onRotate }) 
     } : undefined;
 
     return (
-        <div className="fixed bottom-32 right-8 flex flex-col items-center gap-2 z-50">
+        <div className="fixed bottom-[45vh] right-8 flex flex-col items-center gap-2 z-[60]">
             <div className="text-white font-bold text-sm shadow-black drop-shadow-md">New Tile</div>
             <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing shadow-2xl">
                 <Tile tile={tile} playersOnTile={[]} />
